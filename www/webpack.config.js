@@ -3,15 +3,19 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-    entry: "./src/gen.ts",
+    entry: "./main.js",
     output: {
         path: path.resolve(__dirname, "dist"),
         filename: "index.js",
+        globalObject: 'this',
+    },
+    resolve: {
+        extensions: ['.js', '.wasm']
     },
     plugins: [
         new HtmlWebpackPlugin({
             title: "Getting started with WASM"
         })
     ],
-    mode: "development"
+    mode: "none"
 };
