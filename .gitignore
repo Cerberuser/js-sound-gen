@@ -3,3 +3,4 @@
 Cargo.lock
 .idea/
 dist/
+www/*.js
