@@ -43,3 +43,47 @@ fn interp(values: Vec<f64>) -> Box<dyn Fn(f64) -> f64> {
         values[step] * weight + values[step + 1] * (1.0 - weight)
     })
 }
+
+
+#[cfg(test)]
+mod test {
+    extern crate assert_approx_eq;
+    use crate::sound::interp;
+    use self::assert_approx_eq::assert_approx_eq;
+
+    #[test]
+    fn interp_test_simple() {
+        assert_eq!(interp(vec![2.0, 0.0])(0.5), 1.0);
+    }
+
+    macro_rules! interp_tests_median {
+        ($v1:expr, $($v:expr),+) => {
+            interp_tests_param!(0.5, [$v1, $($v),+]);
+        }
+    }
+
+    macro_rules! interp_tests_param {
+        ($param:expr, [$v1:expr, $($v:expr),+]) => {
+            assert!($param > 0.0 && $param < 1.0);
+            let v = vec![$v1, $($v),+];
+            let count = interp_tests_param!(@count $($v)*);
+            assert!(count > 0);
+            for i in 0..count {
+                let f = i as f64;
+                assert_approx_eq!(interp(v.clone())((f + $param) / count as f64), $param * v[i] + (1.0 - $param) * v[i + 1]);
+            }
+        };
+        (@count) => (0usize);
+        (@count $x:tt $($xs:tt)* ) => (1usize + interp_tests_param!(@count $($xs)*));
+    }
+
+    #[test]
+    fn interp_test_complex() {
+        interp_tests_median!(0.1, 0.2, 0.1, 0.4, 0.5);
+        interp_tests_param!(0.1, [0.1, 0.2, 0.1, 0.4, 0.5]);
+        interp_tests_param!(0.25, [0.01, 1.0, 0.1]);
+        interp_tests_param!(0.75, [1.0, 0.0, 1.0, 0.5]);
+        interp_tests_median!(0.0, 0.5, 0.75, 0.85, 0.9, 0.925, 0.93, 1.0);
+    }
+
+}

@@ -4,3 +4,5 @@ Cargo.lock
 .idea/
 dist/
 www/*.js
+!/www/webpack.config.js
+/www/node_modules/
