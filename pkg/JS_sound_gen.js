@@ -45,3 +45,44 @@ export function sound(arg0) {
 
 }
 
+function freeSoundGen(ptr) {
+
+    wasm.__wbg_soundgen_free(ptr);
+}
+/**
+*/
+export class SoundGen {
+
+    free() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+        freeSoundGen(ptr);
+    }
+
+    /**
+    * @param {number} arg0
+    * @returns {}
+    */
+    constructor(arg0) {
+        this.ptr = wasm.soundgen_new(arg0);
+    }
+}
+
+let cachedTextDecoder = new TextDecoder('utf-8');
+
+let cachegetUint8Memory = null;
+function getUint8Memory() {
+    if (cachegetUint8Memory === null || cachegetUint8Memory.buffer !== wasm.memory.buffer) {
+        cachegetUint8Memory = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachegetUint8Memory;
+}
+
+function getStringFromWasm(ptr, len) {
+    return cachedTextDecoder.decode(getUint8Memory().subarray(ptr, ptr + len));
+}
+
+export function __wbindgen_throw(ptr, len) {
+    throw new Error(getStringFromWasm(ptr, len));
+}
+

@@ -1,4 +1,27 @@
 use wasm_bindgen::prelude::*;
+use std::f64::consts::*;
+
+#[wasm_bindgen]
+pub struct SoundGen {
+    sample_rate: u32,
+    sine_wave: Vec<f64>,
+}
+
+#[wasm_bindgen]
+impl SoundGen {
+    #[wasm_bindgen(constructor)]
+    pub fn new(sample_rate: u32) -> SoundGen {
+        let quarterwave = (0..(sample_rate / 4)).map(|i| ((i as f64) * 2.0 * PI).sin());
+        SoundGen {
+            sample_rate,
+            sine_wave: quarterwave.clone()
+                .chain(quarterwave.clone().rev())
+                .chain(quarterwave.clone().map(|f| -f))
+                .chain(quarterwave.clone().map(|f| -f).rev())
+                .collect(),
+        }
+    }
+}
 
 #[wasm_bindgen]
 pub fn sound(sample_rate: u32) -> Box<[f32]> {
@@ -13,7 +36,7 @@ pub fn sound(sample_rate: u32) -> Box<[f32]> {
                 interp(vec![0.05, 0.1, 0.15, 0.2, 0.25]),
                 Box::new(|_| 0.0),
                 interp(vec![0.5, 0.45, 0.15, 0.1, 0.05])
-            ]
+            ],
         ));
     }
     out.into_boxed_slice()
@@ -48,6 +71,7 @@ fn interp(values: Vec<f64>) -> Box<dyn Fn(f64) -> f64> {
 #[cfg(test)]
 mod test {
     extern crate assert_approx_eq;
+
     use crate::sound::interp;
     use self::assert_approx_eq::assert_approx_eq;
 
@@ -100,5 +124,4 @@ mod test {
         assert_approx_eq!(interp(vec!(0.0, 1.0, 0.0, 0.0, 0.1))(0.625), 0.0);
         assert_approx_eq!(interp(vec!(0.0, 1.0, 0.0, 0.0, 0.1))(0.875), 0.05);
     }
-
 }
