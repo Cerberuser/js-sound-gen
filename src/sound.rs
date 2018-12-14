@@ -21,6 +21,29 @@ impl SoundGen {
                 .collect(),
         }
     }
+
+    pub fn sound(&self, freq: u32) -> Box<[f32]> {
+        self.note(
+            freq,
+            vec![
+                interp(vec![0.25, 0.45, 0.5, 0.5, 0.5]),
+                interp(vec![0.05, 0.1, 0.15, 0.2, 0.25]),
+                Box::new(|_| 0.0),
+                interp(vec![0.5, 0.45, 0.15, 0.1, 0.05])
+            ]
+        ).into_boxed_slice()
+    }
+
+    fn note(&self, freq: u32, obertones: Vec<Box<dyn Fn(f64) -> f64>>) -> Vec<f32> {
+        let mut part = vec![0f32; self.sample_rate as usize];
+        for (i, obertone) in obertones.into_iter().enumerate() {
+            let wave = self.sine_wave.iter().cycle().step_by(freq.pow(i as u32) as usize).take(self.sample_rate as usize);
+            for (j, f) in wave.enumerate() {
+                part[j] += (f * obertone(j as f64 / self.sample_rate as f64)) as f32;
+            }
+        }
+        part
+    }
 }
 
 #[wasm_bindgen]

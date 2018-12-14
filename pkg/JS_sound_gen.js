@@ -66,6 +66,22 @@ export class SoundGen {
     constructor(arg0) {
         this.ptr = wasm.soundgen_new(arg0);
     }
+    /**
+    * @param {number} arg0
+    * @returns {Float32Array}
+    */
+    sound(arg0) {
+        const retptr = globalArgumentPtr();
+        wasm.soundgen_sound(retptr, this.ptr, arg0);
+        const mem = getUint32Memory();
+        const rustptr = mem[retptr / 4];
+        const rustlen = mem[retptr / 4 + 1];
+
+        const realRet = getArrayF32FromWasm(rustptr, rustlen).slice();
+        wasm.__wbindgen_free(rustptr, rustlen * 4);
+        return realRet;
+
+    }
 }
 
 let cachedTextDecoder = new TextDecoder('utf-8');

@@ -6,6 +6,8 @@ const worker = new Worker('./gen-worker.js');
 worker.onerror = (ev: ErrorEvent) => {
     debugger;
 };
+
+const start = document.createElement('a');
 const context = new AudioContext();
 
 let initialized = false;
