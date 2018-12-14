@@ -40,7 +40,7 @@ fn interp(values: Vec<f64>) -> Box<dyn Fn(f64) -> f64> {
         let pos = f * steps;
         let step = pos.floor() as usize;
         let weight = pos - step as f64;
-        values[step] * weight + values[step + 1] * (1.0 - weight)
+        values[step] * (1.0 - weight) + values[step + 1] * weight
     })
 }
 
@@ -70,7 +70,7 @@ mod test {
             assert!(count > 0);
             for i in 0..count {
                 let f = i as f64;
-                assert_approx_eq!(interp(v.clone())((f + $param) / count as f64), $param * v[i] + (1.0 - $param) * v[i + 1]);
+                assert_approx_eq!(interp(v.clone())((f + $param) / count as f64), (1.0 - $param) * v[i] + $param * v[i + 1]);
             }
         };
         (@count) => (0usize);
@@ -84,6 +84,21 @@ mod test {
         interp_tests_param!(0.25, [0.01, 1.0, 0.1]);
         interp_tests_param!(0.75, [1.0, 0.0, 1.0, 0.5]);
         interp_tests_median!(0.0, 0.5, 0.75, 0.85, 0.9, 0.925, 0.93, 1.0);
+    }
+
+    #[test]
+    fn interp_tests_manual() {
+        assert_approx_eq!(interp(vec!(0.0, 1.0, 0.5))(0.4), 0.8);
+        assert_approx_eq!(interp(vec!(0.0, 1.0, 0.5))(0.6), 0.9);
+        assert_approx_eq!(interp(vec!(0.0, 1.0, 0.5))(0.9), 0.6);
+        assert_approx_eq!(interp(vec!(0.0, 1.0, 0.5))(0.1), 0.2);
+
+        assert_approx_eq!(interp(vec!(0.0, 1.0, 0.0, 0.0, 0.1))(0.75), 0.0);
+        assert_approx_eq!(interp(vec!(0.0, 1.0, 0.0, 0.0, 0.1))(0.125), 0.5);
+        assert_approx_eq!(interp(vec!(0.0, 1.0, 0.0, 0.0, 0.1))(0.0625), 0.25);
+        assert_approx_eq!(interp(vec!(0.0, 1.0, 0.0, 0.0, 0.1))(0.375), 0.5);
+        assert_approx_eq!(interp(vec!(0.0, 1.0, 0.0, 0.0, 0.1))(0.625), 0.0);
+        assert_approx_eq!(interp(vec!(0.0, 1.0, 0.0, 0.0, 0.1))(0.875), 0.05);
     }
 
 }
