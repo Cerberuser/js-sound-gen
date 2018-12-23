@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "JS-sound-gen": "file:../pkg",
+    "js-sound-gen": "file:../pkg",
     "typescript": "^3.1.6"
   },
   "devDependencies": {

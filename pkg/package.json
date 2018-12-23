@@ -1,15 +1,15 @@
 {
-  "name": "JS-sound-gen",
+  "name": "js_sound_gen",
   "collaborators": [
     "k.bagrov <k.bagrov@g.nsu.ru>"
   ],
   "version": "0.1.0",
   "files": [
-    "JS_sound_gen_bg.wasm",
-    "JS_sound_gen.js",
-    "JS_sound_gen.d.ts"
+    "js_sound_gen_bg.wasm",
+    "js_sound_gen.js",
+    "js_sound_gen.d.ts"
   ],
-  "module": "JS_sound_gen.js",
-  "types": "JS_sound_gen.d.ts",
+  "module": "js_sound_gen.js",
+  "types": "js_sound_gen.d.ts",
   "sideEffects": "false"
 }

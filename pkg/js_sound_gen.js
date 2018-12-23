@@ -1,5 +1,5 @@
 /* tslint:disable */
-import * as wasm from './JS_sound_gen_bg';
+import * as wasm from './js_sound_gen_bg';
 
 let cachegetFloat32Memory = null;
 function getFloat32Memory() {
@@ -27,22 +27,6 @@ function getUint32Memory() {
         cachegetUint32Memory = new Uint32Array(wasm.memory.buffer);
     }
     return cachegetUint32Memory;
-}
-/**
-* @param {number} arg0
-* @returns {Float32Array}
-*/
-export function sound(arg0) {
-    const retptr = globalArgumentPtr();
-    wasm.sound(retptr, arg0);
-    const mem = getUint32Memory();
-    const rustptr = mem[retptr / 4];
-    const rustlen = mem[retptr / 4 + 1];
-
-    const realRet = getArrayF32FromWasm(rustptr, rustlen).slice();
-    wasm.__wbindgen_free(rustptr, rustlen * 4);
-    return realRet;
-
 }
 
 function freeSoundGen(ptr) {

@@ -3,7 +3,7 @@ use std::f64::consts::*;
 
 #[wasm_bindgen]
 pub struct SoundGen {
-    sample_rate: u32,
+    sample_rate: usize,
     sine_wave: Vec<f64>,
 }
 
@@ -11,9 +11,9 @@ pub struct SoundGen {
 impl SoundGen {
     #[wasm_bindgen(constructor)]
     pub fn new(sample_rate: u32) -> SoundGen {
-        let quarterwave = (0..(sample_rate / 4)).map(|i| ((i as f64) * 2.0 * PI).sin());
+        let quarterwave = (0..(sample_rate / 4)).map(|i| ((i as f64) * 2.0 * PI / (sample_rate as f64)).sin());
         SoundGen {
-            sample_rate,
+            sample_rate: sample_rate as usize,
             sine_wave: quarterwave.clone()
                 .chain(quarterwave.clone().rev())
                 .chain(quarterwave.clone().map(|f| -f))
@@ -26,58 +26,26 @@ impl SoundGen {
         self.note(
             freq,
             vec![
-                interp(vec![0.25, 0.45, 0.5, 0.5, 0.5]),
-                interp(vec![0.05, 0.1, 0.15, 0.2, 0.25]),
-                Box::new(|_| 0.0),
-                interp(vec![0.5, 0.45, 0.15, 0.1, 0.05])
-            ]
+                interp(vec![0.75, 0.5, 0.75, 0.95, 0.95]),
+                Box::new( |_| 0.1),
+                Box::new(|_| 0.05),
+                interp(vec![0.0, 0.0, 0.5, 0.2, 0.2, 0.1, 0.0, 0.0, 0.0])
+            ],
         ).into_boxed_slice()
     }
 
     fn note(&self, freq: u32, obertones: Vec<Box<dyn Fn(f64) -> f64>>) -> Vec<f32> {
-        let mut part = vec![0f32; self.sample_rate as usize];
+        let mut part = vec![0f32; self.sample_rate];
         for (i, obertone) in obertones.into_iter().enumerate() {
-            let wave = self.sine_wave.iter().cycle().step_by(freq.pow(i as u32) as usize).take(self.sample_rate as usize);
-            for (j, f) in wave.enumerate() {
-                part[j] += (f * obertone(j as f64 / self.sample_rate as f64)) as f32;
+            let mut pos = 0;
+            let step = freq as usize * (i + 1);
+            for j in 0..self.sample_rate {
+                part[j] += (self.sine_wave[pos] * obertone(j as f64 / self.sample_rate as f64)) as f32;
+                pos = (pos + step) % self.sample_rate;
             }
         }
         part
     }
-}
-
-#[wasm_bindgen]
-pub fn sound(sample_rate: u32) -> Box<[f32]> {
-    let mut out: Vec<f32> = vec![];
-    for note in 0..=5i16 {
-        out.append(&mut note_sound(
-            sample_rate,
-            220f64 * (2.0f64).powf(note as f64 / 4.0),
-            1.0,
-            vec![
-                interp(vec![0.25, 0.45, 0.5, 0.5, 0.5]),
-                interp(vec![0.05, 0.1, 0.15, 0.2, 0.25]),
-                Box::new(|_| 0.0),
-                interp(vec![0.5, 0.45, 0.15, 0.1, 0.05])
-            ],
-        ));
-    }
-    out.into_boxed_slice()
-}
-
-fn note_sound(sample_rate: u32, freq: f64, duration: f64, obertones: Vec<Box<dyn Fn(f64) -> f64>>) -> Vec<f32> {
-    let mut part = vec![0f32; (sample_rate as f64 * duration) as usize];
-    for (i, obertone) in obertones.into_iter().enumerate() {
-        let wave = sine(freq * i as f64, sample_rate, duration, obertone);
-        for (j, f) in wave.into_iter().enumerate() {
-            part[j] += f;
-        }
-    }
-    part
-}
-
-fn sine(freq: f64, sample_rate: u32, duration: f64, loudness: Box<dyn Fn(f64) -> f64>) -> Vec<f32> {
-    (0..(sample_rate as f64 * duration).floor() as u64).map(|i| ((i as f64 * freq).sin() * loudness(i as f64 / sample_rate as f64 / duration)) as f32).collect()
 }
 
 fn interp(values: Vec<f64>) -> Box<dyn Fn(f64) -> f64> {
@@ -93,10 +61,12 @@ fn interp(values: Vec<f64>) -> Box<dyn Fn(f64) -> f64> {
 
 #[cfg(test)]
 mod test {
+
     extern crate assert_approx_eq;
 
     use crate::sound::interp;
     use self::assert_approx_eq::assert_approx_eq;
+    use crate::sound::SoundGen;
 
     #[test]
     fn interp_test_simple() {
@@ -146,5 +116,47 @@ mod test {
         assert_approx_eq!(interp(vec!(0.0, 1.0, 0.0, 0.0, 0.1))(0.375), 0.5);
         assert_approx_eq!(interp(vec!(0.0, 1.0, 0.0, 0.0, 0.1))(0.625), 0.0);
         assert_approx_eq!(interp(vec!(0.0, 1.0, 0.0, 0.0, 0.1))(0.875), 0.05);
+    }
+
+    mod bench {
+        extern crate test;
+        use self::test::Bencher;
+
+        fn array_iter(b: &mut Bencher, step: usize) {
+            let arr: Vec<i32> = (0..48000).collect();
+            b.iter(|| {
+                let mut pos = 0;
+                let mut res = Vec::with_capacity(48000);
+                for _ in 0..48000 {
+                    res.push(arr[pos]);
+                    pos = (pos + step) % 4800;
+                }
+            });
+        }
+
+        #[bench]
+        fn array_iter_100(b: &mut Bencher) {
+            array_iter(b, 100);
+        }
+
+        #[bench]
+        fn array_iter_200(b: &mut Bencher) {
+            array_iter(b, 200);
+        }
+
+        #[bench]
+        fn array_iter_300(b: &mut Bencher) {
+            array_iter(b, 300);
+        }
+
+        #[bench]
+        fn array_iter_400(b: &mut Bencher) {
+            array_iter(b, 400);
+        }
+
+        #[bench]
+        fn array_iter_500(b: &mut Bencher) {
+            array_iter(b, 500);
+        }
     }
 }

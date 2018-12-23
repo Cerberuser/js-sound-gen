@@ -7,7 +7,7 @@ worker.onerror = (ev: ErrorEvent) => {
     debugger;
 };
 
-const start = document.createElement('a');
+// const start = document.createElement('a');
 const context = new AudioContext();
 
 let initialized = false;
@@ -30,24 +30,28 @@ worker.onmessage = (ev: MessageEvent) => {
         make_wav(sampleRate, arr);
     } else {
         initialized = true;
-        worker.postMessage({sampleRate: context.sampleRate});
     }
+    worker.postMessage({sampleRate: context.sampleRate});
 };
 
-// import("JS-sound-gen").then(({sound}) => {
+// import("js-sound-gen").then(({SoundGen}) => {
 //     const sampleRate = context.sampleRate;
 //
-//     const buf = sound(context.sampleRate).buffer;
+//     const sound = new SoundGen(sampleRate);
+//     const buf = sound.sound(220).buffer;
 //     const buffer = context.createBuffer(1, sampleRate * 6, sampleRate);
-//
 //     const source = context.createBufferSource();
 //
-//     buffer.copyToChannel(new Float32Array(buf as ArrayBuffer), 0, 0);
+//     const arr = new Float32Array(buf);
+//
+//     buffer.copyToChannel(arr, 0, 0);
 //     console.log(buffer.getChannelData(0));
 //     source.buffer = buffer;
 //     source.connect(context.destination);
 //
 //     source.start();
+//
+//     make_wav(sampleRate, arr);
 // });
 
 
