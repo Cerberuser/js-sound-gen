@@ -14,24 +14,24 @@ let initialized = false;
 
 worker.onmessage = (ev: MessageEvent) => {
 
+    worker.postMessage({sampleRate: context.sampleRate});
     if (initialized) {
         const sampleRate = context.sampleRate;
         const buffer = context.createBuffer(1, sampleRate * 6, sampleRate);
         const source = context.createBufferSource();
-        const arr = new Float32Array(ev.data.buf as ArrayBuffer);
 
+        const arr = new Float32Array(ev.data.buf as ArrayBuffer);
         buffer.copyToChannel(arr, 0, 0);
         console.log(buffer.getChannelData(0));
         source.buffer = buffer;
+
         source.connect(context.destination);
 
         source.start();
-
         make_wav(sampleRate, arr);
     } else {
         initialized = true;
     }
-    worker.postMessage({sampleRate: context.sampleRate});
 };
 
 // import("js-sound-gen").then(({SoundGen}) => {
