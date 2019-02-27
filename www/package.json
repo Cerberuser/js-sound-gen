@@ -13,15 +13,15 @@
   "license": "ISC",
   "dependencies": {
     "js-sound-gen": "file:../pkg",
-    "typescript": "^3.1.6"
+    "typescript": "3.1.6"
   },
   "devDependencies": {
-    "file-loader": "^2.0.0",
-    "html-webpack-plugin": "^3.2.0",
-    "ts-loader": "^5.3.1",
-    "webpack": "^4.25.1",
-    "webpack-cli": "^3.1.2",
-    "webpack-dev-server": "^3.1.10",
-    "worker-loader": "^2.0.0"
+    "file-loader": "2.0.0",
+    "html-webpack-plugin": "3.2.0",
+    "ts-loader": "5.3.1",
+    "webpack": "4.25.1",
+    "webpack-cli": "3.1.2",
+    "webpack-dev-server": "3.1.11",
+    "worker-loader": "2.0.0"
   }
 }
